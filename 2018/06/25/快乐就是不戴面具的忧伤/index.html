@@ -25,6 +25,20 @@
         border-left-color: #1E92FB;    /*左边框颜色*/
     }
 </style>
+<script>
+    (function () {
+        if ('123456') {
+            if (prompt('请输入文章密码') !== '123456') {
+                alert('密码错误！');
+                if (history.length === 1) {
+                    location.replace("http://laughingmoon.github.io"); // 这里替换成你的首页
+                } else {
+                    history.back();
+                }
+            }
+        }
+    })();
+</script>
 <meta name="theme-color" content="#222">
 
 
@@ -75,7 +89,7 @@
 <link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
 
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico?v=5.1.4">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/test.png?v=5.1.4">
 
 
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
@@ -90,7 +104,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="“生活”," />
 
 
 
@@ -104,13 +118,14 @@
 
 
 <meta name="description" content="欢乐与忧伤纪伯伦 一位妇人说：请给我们谈谈欢乐和忧伤。他回答：你们的欢乐是不带面具的忧伤。你欢笑的泉眼常常也饱含着泪水。除此之外，又当如何？镌刻在你们身上的忧伤愈深，你们能盛装的欢乐愈多。斟满了美酒的杯盏，难道不是曾在陶工炉火中锻造的杯盏吗？当你们快乐时，请审视自己的内心，你们会发现曾经的忧伤如今却让你们快乐。当你们忧伤时，请再次审视自己的内心，你们会发现曾经的快乐如今却让你们流泪。你们中有些人说">
+<meta name="keywords" content="“生活”">
 <meta property="og:type" content="article">
 <meta property="og:title" content="快乐就是不戴面具的忧伤">
 <meta property="og:url" content="http://yoursite.com/2018/06/25/快乐就是不戴面具的忧伤/index.html">
 <meta property="og:site_name" content="Laughing BLOG">
 <meta property="og:description" content="欢乐与忧伤纪伯伦 一位妇人说：请给我们谈谈欢乐和忧伤。他回答：你们的欢乐是不带面具的忧伤。你欢笑的泉眼常常也饱含着泪水。除此之外，又当如何？镌刻在你们身上的忧伤愈深，你们能盛装的欢乐愈多。斟满了美酒的杯盏，难道不是曾在陶工炉火中锻造的杯盏吗？当你们快乐时，请审视自己的内心，你们会发现曾经的忧伤如今却让你们快乐。当你们忧伤时，请再次审视自己的内心，你们会发现曾经的快乐如今却让你们流泪。你们中有些人说">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-24T16:46:33.966Z">
+<meta property="og:updated_time" content="2018-06-27T15:36:21.147Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="快乐就是不戴面具的忧伤">
 <meta name="twitter:description" content="欢乐与忧伤纪伯伦 一位妇人说：请给我们谈谈欢乐和忧伤。他回答：你们的欢乐是不带面具的忧伤。你欢笑的泉眼常常也饱含着泪水。除此之外，又当如何？镌刻在你们身上的忧伤愈深，你们能盛装的欢乐愈多。斟满了美酒的杯盏，难道不是曾在陶工炉火中锻造的杯盏吗？当你们快乐时，请审视自己的内心，你们会发现曾经的忧伤如今却让你们快乐。当你们忧伤时，请再次审视自己的内心，你们会发现曾经的快乐如今却让你们流泪。你们中有些人说">
@@ -366,9 +381,29 @@
           </span>
 
           
-
-          
+            <span class="post-category" >
             
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/午后时光/" itemprop="url" rel="index">
+                    <span itemprop="name">午后时光</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
           
 
           
@@ -482,6 +517,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/“生活”/" <i class="fa fa-tag"></i> “生活”</a>
+          
+        </div>
+      
 
       
       
@@ -511,16 +552,6 @@
 
 
           
-
-  
-    <div class="comments" id="comments">
-      <div id="lv-container" data-id="city" data-uid="your uid"></div>
-    </div>
-
-  
-  
-
-
 
   
  
@@ -582,7 +613,25 @@
             
 
             
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
 
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
             
 
           </nav>
@@ -876,17 +925,6 @@
 
 
   
-    <script type="text/javascript">
-      (function(d, s) {
-        var j, e = d.getElementsByTagName(s)[0];
-        if (typeof LivereTower === 'function') { return; }
-        j = d.createElement(s);
-        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
-        j.async = true;
-        e.parentNode.insertBefore(j, e);
-      })(document, 'script');
-    </script>
-  
 
 
 
@@ -900,17 +938,6 @@
 
 
 
-  
-    <script type="text/javascript">
-      (function(d, s) {
-        var j, e = d.getElementsByTagName(s)[0];
-        if (typeof LivereTower === 'function') { return; }
-        j = d.createElement(s);
-        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
-        j.async = true;
-        e.parentNode.insertBefore(j, e);
-      })(document, 'script');
-    </script>
   
 
 
