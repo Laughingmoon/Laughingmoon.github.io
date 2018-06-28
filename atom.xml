@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://laughingmoon.github.io/"/>
-  <updated>2018-06-27T16:59:13.512Z</updated>
+  <updated>2018-06-28T16:18:03.340Z</updated>
   <id>http://laughingmoon.github.io/</id>
   
   <author>
@@ -17,11 +17,114 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>MySQL/MariaDB主主数据同步配置</title>
+    <link href="http://laughingmoon.github.io/2018/06/28/MySQL-MariaDB%E4%B8%BB%E4%B8%BB%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/"/>
+    <id>http://laughingmoon.github.io/2018/06/28/MySQL-MariaDB主主数据同步配置/</id>
+    <published>2018-06-28T15:17:09.000Z</published>
+    <updated>2018-06-28T16:18:03.340Z</updated>
+    
+    <content type="html"><![CDATA[<p>在一些高可用的场景中需要配置主主互备，即双主数据同步。MySQL的主主同步和主从同步的原理一样，只是主主同步的双方都是主从角色。本文以MariaDB来演示主主配置细节。</p><p>1.准备环境<br>操作系统：CentOS6.5 64位<br>MariaDB版本：10.2.12<br>节点DB1：192.168.11.31<br>节点DB2：192.168.11.32<br>开了防火墙策略的需要开放端口（默认3306）。</p><p>2.配置DB1的配置文件(my.cnf)<br>在/etc/my.cnf中添加以下选项：</p><pre><code>server-id  = 1log-bin=mysql-binrelay-log = mysql-relay-binreplicate-wild-ignore-table=mysql.%replicate-wild-ignore-table=information_schema.%log-slave-updates=onslave-skip-errors=allauto-increment-offset=1auto-increment-increment=2binlog_format=mixedexpire_logs_days = 10server-id = 1服务器节点ID，必须唯一。</code></pre><p>log-bin=mysql-bin开启二进制日志功能，mysql-bin是命名格式，会生成文件名为mysql-bin.000001、mysql-bin.000002等日志文件。</p><p>relay-log = mysql-relay-bin作为从服务器时的中继日志。</p><p>replicate-wild-ignore-table=mysql.%是复制过滤选项，可以过滤不需要复制同步的数据库或表，如“mysql.%”指不复制MySQL库下的所有表，依此类推，多个数据库就多写几行。注意不建议在主库或从库上使用binlog-do-db或binlog-ignore-db，也不要再从库上使用replicate-do-db或replicate-do-db选项，因为这样可能会产生跨库更新失败的问题。我们推荐使用replicate-wild-do-table和replicate-wild-ignore-table解决复制过滤问题。</p><p>log-slave-updates=onslave 将复制事件写进自己的二进制日志。</p><p>slave-skip-errors=all跳过主从复制中遇到的所有错误或指定类型的错误,避免 slave 端复制中断。</p><p>auto-increment-offset=1主键自增规则，自增因子（每次加2）。</p><p>auto-increment-increment=2主键自增规则，自增偏移（从1开始），单数。</p><p>binlog_format=mixed主从复制的格式(mixed,statement,row,默认格式是 statement)。</p><p>expire_logs_days = 10日志保存天数：10天。</p><p>3.配置DB2的配置文件(my.cnf)<br>在/etc/my.cnf中添加以下选项：</p><pre><code>server-id = 2log-bin=mysql-binrelay-log = mysql-relay-binreplicate-wild-ignore-table=mysql.%replicate-wild-ignore-table=information_schema.%log-slave-updates=onslave-skip-errors=allauto-increment-offset=2auto-increment-increment=2binlog_format=mixedexpire_logs_days = 10</code></pre><p>DB2的my.cnf的配置基本一致，主主模式下区别有两个：</p><p>server-id = 2服务器节点ID，一定要保证唯一值，不能和DB1冲突。<br>auto-increment-offset=2设置主键自增规则，自增偏移2，即双数。DB1是单数，这样DB1和DB2就形成了奇偶ID不会重复的情况，就能保证表中的主键不冲突。</p><p>我们这里两台服务器DB1和DB2中的MariaDB是新安装的，没有多余的表。假如你的数据库中已经有数据了，那最好保证DB1和DB2的数据一致，在数据同步之前，先可关闭数据库的写权限。<br>4.重启MariaDB服务<br>配置好MariaDB的配置文件后，保存并重启服务，使配置生效。</p><pre><code>/etc/init.d/mariadb restart</code></pre><p>5.DB1作为Master授权给DB2<br>在DB1中进入到MySQL终端：</p><pre><code>[root@localhost ~]# /usr/local/mariadb/bin/mysql -uroot -p</code></pre><p>然后允许用户hello32，使用密码：123456x，可以从IP：192.168.11.32（DB2）访问DB1，并授予复制同步数据的权限。</p><pre><code>MariaDB [(none)]&gt; grant replication slave, replication client on *.* to &apos;hello32&apos;@&apos;192.168.11.32&apos; identified by &apos;123456x&apos;;mysql&gt; flush privileges;</code></pre><p>授权完毕后记得刷新权限表。</p><p>接着马上查看binlog文件的position（偏移）和File（日志文件）的值，从机上(DB2)需要用到：</p><pre><code>MariaDB [(none)]&gt; show master status;+------------------+----------+--------------+------------------+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |+------------------+----------+--------------+------------------+| mysql-bin.000007 |      358 |              |                  |+------------------+----------+--------------+------------------+1 row in set (0.01 sec)</code></pre><p>6.DB2作为Master授权给DB1<br>同样的，进入DB2的MySQL终端，授权给DB1的用户：</p><pre><code>MariaDB [(none)]&gt; grant replication slave, replication client on *.* to &apos;hello31&apos;@&apos;192.168.11.31&apos; identified by &apos;123456x&apos;;mysql&gt; flush privileges;</code></pre><p>接着马上查看binlog文件的position（偏移）和File（日志文件）的值，从机上(DB1)需要用到：</p><pre><code>MariaDB [(none)]&gt; show master status;+------------------+----------+--------------+------------------+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |+------------------+----------+--------------+------------------+| mysql-bin.000013 |      358 |              |                  |+------------------+----------+--------------+------------------+1 row in set (0.00 sec)</code></pre><p>7.配置DB1的Slave<br>DB1作为Slave从库，需要访问主库DB2，使用以下命令：</p><pre><code>MariaDB [(none)]&gt; change master to master_host=&apos;192.168.11.32&apos;,master_user=&apos;hello31&apos;, master_password=&apos;123456x&apos;, master_port=3306, master_log_file=&apos;mysql-bin.000013&apos;, master_log_pos=358, master_connect_retry=30;</code></pre><p>注意日志文件和偏移值是第6步DB2中show master status查看到的。master_connect_retry=30是尝试连接时间。</p><p>8.配置DB2的Slave<br>现在DB2作为Slave从库，需要连接主库DB1：</p><pre><code>MariaDB [(none)]&gt; change master to master_host=&apos;192.168.11.31&apos;,master_user=&apos;hello32&apos;, master_password=&apos;123456x&apos;, master_port=3306, master_log_file=&apos;mysql-bin.000007&apos;, master_log_pos=358, master_connect_retry=30;</code></pre><p>这里的日志文件和偏移值是第5步DB1中查看到的。</p><p>9.启动Slave<br>现在可以启动同步复制了，在两台服务器上分别使用命令：</p><pre><code>MariaDB [(none)]&gt; start slave;Query OK, 0 rows affected (0.00 sec)在DB1上执行：MariaDB [(none)]&gt; show slave status\G;*************************** 1. row ***************************               Slave_IO_State: Waiting for master to send event                  Master_Host: 192.168.11.32                  Master_User: hello31                  Master_Port: 3306                Connect_Retry: 30              Master_Log_File: mysql-bin.000013          Read_Master_Log_Pos: 358               Relay_Log_File: mysql-relay-bin.000002                Relay_Log_Pos: 555        Relay_Master_Log_File: mysql-bin.000013             Slave_IO_Running: Yes            Slave_SQL_Running: Yes              Replicate_Do_DB:           Replicate_Ignore_DB:            Replicate_Do_Table:        Replicate_Ignore_Table:       Replicate_Wild_Do_Table:   Replicate_Wild_Ignore_Table: mysql.%,information_schema.%</code></pre><p>在DB2上执行：</p><pre><code>MariaDB [(none)]&gt; show slave status\G;*************************** 1. row ***************************               Slave_IO_State: Waiting for master to send event                  Master_Host: 192.168.11.31                  Master_User: hello32                  Master_Port: 3306                Connect_Retry: 30              Master_Log_File: mysql-bin.000007          Read_Master_Log_Pos: 358               Relay_Log_File: mysql-relay-bin.000002                Relay_Log_Pos: 555        Relay_Master_Log_File: mysql-bin.000007             Slave_IO_Running: Yes            Slave_SQL_Running: Yes              Replicate_Do_DB:           Replicate_Ignore_DB:            Replicate_Do_Table:        Replicate_Ignore_Table:       Replicate_Wild_Do_Table:   Replicate_Wild_Ignore_Table: mysql.%,information_schema.%</code></pre><p>我们看到两台服务器的数据同步信息中Slave_IO_Running和Slave_SQL_Running 都是Yes，说明我们配置成功了！</p><p>10.验证<br>我们在DB1上新建一个数据库：myhelloweba，然后在myhelloweba库中新建一个表article，再往article表中插入一条数据。</p><pre><code>MariaDB [(none)]&gt; create database if not exists myhelloweba default character set utf8 collate utf8_general_ci;MariaDB [(none)]&gt; use myhelloweba;Database changedMariaDB [myhelloweba]&gt; insert into article (id,title) values (null, &apos;Helloweba&apos;);Query OK, 1 row affected (0.01 sec)MariaDB [myhelloweba]&gt; insert into article (id,title) values (null, &apos;Helloweba&apos;);Query OK, 1 row affected (0.01 sec)</code></pre><p>我们在到DB2查看数据表：</p><pre><code>MariaDB [myhelloweba]&gt; select * from article;+----+-----------+| id | title     |+----+-----------+|  1 | Helloweba |+----+-----------+1 row in set (0.00 sec)</code></pre><p>发现DB2的article表数据也有了。反复操作几次，看下两台数据库中的数据完全一致，说明我们的主主配置是成功的。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;在一些高可用的场景中需要配置主主互备，即双主数据同步。MySQL的主主同步和主从同步的原理一样，只是主主同步的双方都是主从角色。本文以MariaDB来演示主主配置细节。&lt;/p&gt;
+&lt;p&gt;1.准备环境&lt;br&gt;操作系统：CentOS6.5 64位&lt;br&gt;MariaDB版本：10.
+      
+    
+    </summary>
+    
+      <category term="Mysql" scheme="http://laughingmoon.github.io/categories/Mysql/"/>
+    
+    
+      <category term="msyql同步" scheme="http://laughingmoon.github.io/tags/msyql%E5%90%8C%E6%AD%A5/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>svn钩子自动同步代码</title>
+    <link href="http://laughingmoon.github.io/2018/06/28/svn%E9%92%A9%E5%AD%90%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81/"/>
+    <id>http://laughingmoon.github.io/2018/06/28/svn钩子自动同步代码/</id>
+    <published>2018-06-28T15:17:09.000Z</published>
+    <updated>2018-06-28T15:50:30.050Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="设置svn钩子自动更新"><a href="#设置svn钩子自动更新" class="headerlink" title="设置svn钩子自动更新"></a>设置svn钩子自动更新</h2><p>1.安装svn </p><pre><code>yum install subversion</code></pre><p>2.建个svn的根目录，方便管理</p><pre><code>mkdir -p /home/svn/</code></pre><p>3.创建版本库 </p><pre><code>svnadmin create project1 </code></pre><p>4.创建站点目录</p><pre><code>mkdir /home/www/web</code></pre><p>5.建立钩子脚本<br>在/home/svn/repos/hooks 目录下创建 post-commit，内容如下</p><p> #!/bin/bash<br>    export LANG=zh_CN.UTF-8<br>    echo “Code Deployed at <code>date &quot;+%Y-%m-%d %H:%M&quot;</code>“ &gt;&gt; /home/svn/repos/hooks/deploy_log<br>    /usr/bin/svn update –username user1 –password user1  /home/www/web</p><p>post-commit给执行权限</p><pre><code>chmod +x post-commit</code></pre><p>6.Checkout一份代码到站点目录</p><pre><code>/usr/bin/svn checkout svn://localhost/repos /home/www/web</code></pre><p>7.启动svn  svnserve -d -r /home/svn<br>8.然后用windows svn客户端checkout一份代码到本地目录，然后在这个目录新增一个文件。那么就可以看到　　<br>/home/www/web目录下就新增了这个文件了。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;设置svn钩子自动更新&quot;&gt;&lt;a href=&quot;#设置svn钩子自动更新&quot; class=&quot;headerlink&quot; title=&quot;设置svn钩子自动更新&quot;&gt;&lt;/a&gt;设置svn钩子自动更新&lt;/h2&gt;&lt;p&gt;1.安装svn &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;yum instal
+      
+    
+    </summary>
+    
+      <category term="SVN" scheme="http://laughingmoon.github.io/categories/SVN/"/>
+    
+    
+      <category term="svn钩子" scheme="http://laughingmoon.github.io/tags/svn%E9%92%A9%E5%AD%90/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>mysql双主一从同步</title>
+    <link href="http://laughingmoon.github.io/2018/06/28/MySQL%E5%8F%8C%E4%B8%BB%E4%B8%80%E4%BB%8E%E5%90%8C%E6%AD%A5/"/>
+    <id>http://laughingmoon.github.io/2018/06/28/MySQL双主一从同步/</id>
+    <published>2018-06-28T15:17:09.000Z</published>
+    <updated>2018-06-28T16:24:01.238Z</updated>
+    
+    <content type="html"><![CDATA[<p>目前MySQL依然只支持一个Slave从一个Master复制数据，虽然也可以做到一主多备(M-&gt;S)，双主复制(M<->M)等架构，但是局限性依然很大。由于项目的要求，需要各个主库的表整合到一个地方进行统计和分析，要是每次连不同的实例操作，是一件非常耗体力的操作。所以继续一种类似多主一从的实例。</-></p><p>安装：<br>可以根据一键安装包只安装mysql，亲测很方便实用。<br><a href="https://lnmp.org/install.html" target="_blank" rel="noopener">https://lnmp.org/install.html</a></p><p>环境搭建：<br>Master 1：200.51(MariaDB)<br>Master 2：200.52(MariaDB)<br>Slave ：200.73(MariaDB) 修改好server-id</p><p>确认好Master的POS：</p><pre><code>M1:rep@192.168.200.51 : (none) 10:26:11&gt;show master status;+--------------------+----------+--------------+------------------+| File | Position | Binlog_Do_DB | Binlog_Ignore_DB |+--------------------+----------+--------------+------------------+| mysql-bin51.000013 | 107 | | test |+--------------------+----------+--------------+------------------+row in set (0.01 sec)</code></pre><p>M2：</p><pre><code>rep@192.168.200.52 : r2 10:26:23&gt;show master status; +---------------------+----------+--------------+------------------+| File | Position | Binlog_Do_DB | Binlog_Ignore_DB |+---------------------+----------+--------------+------------------+| mysql-bin_52.000106 | 107 | | test |+---------------------+----------+--------------+------------------+row in set (0.00 sec)</code></pre><p>1、主服务器的配置<br>2、编辑/etc/my.cnf文件<br>[root@localhost ~]# vim /etc/my.cnf    在[mysqld]段的最后添加以下内容</p><pre><code>skip_name_resolve = ONinnodb_file_per_table = ONserver-id = 1 （id号不能跟从服务器相同）log-bin = master-log51（自定义二进制日志文件名）</code></pre><p>3、授权可以复制本地数据库信息的主机</p><pre><code>[root@localhost ~]# /etc/init.d/mariadb start（启动mariadb server）[root@localhost ~]# mysqlMariaDB [(none)]&gt; grant replication slave,replication client on *.* to &apos;repluser&apos;@&apos;10.1.51.%&apos; identified by &apos;replpasswd&apos;;MariaDB [(none)]&gt; flush privileges;</code></pre><p>4、第二台主机跟同上，但是server-id 不能相同，log-bin 文件名要区分开。<br>5、Slave上操作</p><pre><code>MariaDB [(none)]&gt; change master &apos;r1&apos; to master_host=&apos;192.168.200.51&apos;,master_user=&apos;rep&apos;,master_password=&apos;rep123456&apos;,master_log_file=&apos;mysql-bin51.000013&apos;,master_log_pos=107;Query OK, 0 rows affected (0.23 sec)MariaDB [(none)]&gt; change master &apos;r2&apos; to master_host=&apos;192.168.200.52&apos;,master_user=&apos;rep&apos;,master_password=&apos;rep123456&apos;,master_log_file=&apos;mysql-bin_52.000106&apos;,master_log_pos=107;Query OK, 0 rows affected (0.25 sec)</code></pre><p>#查看所有通道</p><pre><code>MariaDB [(none)]&gt; show all slaves status\G;*************************** 1. row ***************************Connection_name: r1Slave_SQL_State: Slave_IO_State: Master_Host: 192.168.200.51Master_User: repMaster_Port: 3306Connect_Retry: 60Master_Log_File: mysql-bin51.000013Read_Master_Log_Pos: 107Relay_Log_File: mysqld-relay-bin-r1.000001Relay_Log_Pos: 4Relay_Master_Log_File: mysql-bin51.000013Slave_IO_Running: NoSlave_SQL_Running: NoReplicate_Do_DB: Replicate_Ignore_DB: Replicate_Do_Table: Replicate_Ignore_Table: Replicate_Wild_Do_Table: Replicate_Wild_Ignore_Table: Last_Errno: 0Last_Error: Skip_Counter: 0Exec_Master_Log_Pos: 107Relay_Log_Space: 248Until_Condition: NoneUntil_Log_File: Until_Log_Pos: 0Master_SSL_Allowed: NoMaster_SSL_CA_File: Master_SSL_CA_Path: Master_SSL_Cert: Master_SSL_Cipher: Master_SSL_Key: Seconds_Behind_Master: NULLMaster_SSL_Verify_Server_Cert: NoLast_IO_Errno: 0Last_IO_Error: Last_SQL_Errno: 0Last_SQL_Error: Replicate_Ignore_Server_Ids: Master_Server_Id: 0Master_SSL_Crl: Master_SSL_Crlpath: Using_Gtid: NoGtid_IO_Pos: Retried_transactions: 0Max_relay_log_size: 104857600Executed_log_entries: 0Slave_received_heartbeats: 0Slave_heartbeat_period: 1800.000Gtid_Slave_Pos: *************************** 2. row ***************************Connection_name: r2Slave_SQL_State: Slave_IO_State: Master_Host: 192.168.200.52Master_User: repMaster_Port: 3306Connect_Retry: 60Master_Log_File: mysql-bin_52.000106Read_Master_Log_Pos: 107Relay_Log_File: mysqld-relay-bin-r2.000001Relay_Log_Pos: 4Relay_Master_Log_File: mysql-bin_52.000106Slave_IO_Running: NoSlave_SQL_Running: NoReplicate_Do_DB: Replicate_Ignore_DB: Replicate_Do_Table: Replicate_Ignore_Table: Replicate_Wild_Do_Table: Replicate_Wild_Ignore_Table: Last_Errno: 0Last_Error: Skip_Counter: 0Exec_Master_Log_Pos: 107Relay_Log_Space: 248Until_Condition: NoneUntil_Log_File: Until_Log_Pos: 0Master_SSL_Allowed: NoMaster_SSL_CA_File: Master_SSL_CA_Path: Master_SSL_Cert: Master_SSL_Cipher: Master_SSL_Key: Seconds_Behind_Master: NULLMaster_SSL_Verify_Server_Cert: NoLast_IO_Errno: 0Last_IO_Error: Last_SQL_Errno: 0Last_SQL_Error: Replicate_Ignore_Server_Ids: Master_Server_Id: 0Master_SSL_Crl: Master_SSL_Crlpath: Using_Gtid: NoGtid_IO_Pos: Retried_transactions: 0Max_relay_log_size: 104857600Executed_log_entries: 0Slave_received_heartbeats: 0Slave_heartbeat_period: 1800.000Gtid_Slave_Pos: rows in set (0.00 sec)ERROR: No query specified</code></pre><p>查看单个通道</p><pre><code>MariaDB [(none)]&gt; show slave &apos;r1&apos; status\G;*************************** 1. row ***************************Slave_IO_State: Master_Host: 192.168.200.51Master_User: repMaster_Port: 3306Connect_Retry: 60Master_Log_File: mysql-bin51.000013Read_Master_Log_Pos: 107Relay_Log_File: mysqld-relay-bin-r1.000001Relay_Log_Pos: 4Relay_Master_Log_File: mysql-bin51.000013Slave_IO_Running: NoSlave_SQL_Running: NoReplicate_Do_DB: Replicate_Ignore_DB: Replicate_Do_Table: Replicate_Ignore_Table: Replicate_Wild_Do_Table: Replicate_Wild_Ignore_Table: Last_Errno: 0Last_Error: Skip_Counter: 0Exec_Master_Log_Pos: 107Relay_Log_Space: 248Until_Condition: NoneUntil_Log_File: Until_Log_Pos: 0Master_SSL_Allowed: NoMaster_SSL_CA_File: Master_SSL_CA_Path: Master_SSL_Cert: Master_SSL_Cipher: Master_SSL_Key: Seconds_Behind_Master: NULLMaster_SSL_Verify_Server_Cert: NoLast_IO_Errno: 0Last_IO_Error: Last_SQL_Errno: 0Last_SQL_Error: Replicate_Ignore_Server_Ids: Master_Server_Id: 0Master_SSL_Crl: Master_SSL_Crlpath: Using_Gtid: NoGtid_IO_Pos: row in set (0.00 sec)ERROR: No query specifiedMariaDB [(none)]&gt; show slave &apos;r2&apos; status\G;*************************** 1. row ***************************Slave_IO_State: Master_Host: 192.168.200.52Master_User: repMaster_Port: 3306Connect_Retry: 60Master_Log_File: mysql-bin_52.000106Read_Master_Log_Pos: 107Relay_Log_File: mysqld-relay-bin-r2.000001Relay_Log_Pos: 4Relay_Master_Log_File: mysql-bin_52.000106Slave_IO_Running: NoSlave_SQL_Running: NoReplicate_Do_DB: Replicate_Ignore_DB: Replicate_Do_Table: Replicate_Ignore_Table: Replicate_Wild_Do_Table: Replicate_Wild_Ignore_Table: Last_Errno: 0Last_Error: Skip_Counter: 0Exec_Master_Log_Pos: 107Relay_Log_Space: 248Until_Condition: NoneUntil_Log_File: Until_Log_Pos: 0Master_SSL_Allowed: NoMaster_SSL_CA_File: Master_SSL_CA_Path: Master_SSL_Cert: Master_SSL_Cipher: Master_SSL_Key: Seconds_Behind_Master: NULLMaster_SSL_Verify_Server_Cert: NoLast_IO_Errno: 0Last_IO_Error: Last_SQL_Errno: 0Last_SQL_Error: Replicate_Ignore_Server_Ids: Master_Server_Id: 0Master_SSL_Crl: Master_SSL_Crlpath: Using_Gtid: NoGtid_IO_Pos: row in set (0.00 sec)------------------------------------------------------------</code></pre><p>开启单个通道</p><pre><code>MariaDB [(none)]&gt; start slave &apos;r1&apos;;Query OK, 0 rows affected (0.00 sec)MariaDB [(none)]&gt; start slave &apos;r2&apos;;Query OK, 0 rows affected (0.00 sec)</code></pre><p>开启所有通道</p><pre><code>MariaDB [(none)]&gt; start all slaves;Query OK, 0 rows affected, 2 warnings (0.01 sec)MariaDB [(none)]&gt; show warnings;+-------+------+--------------------+| Level | Code | Message |+-------+------+--------------------+| Note | 1937 | SLAVE &apos;r2&apos; started || Note | 1937 | SLAVE &apos;r1&apos; started |+-------+------+--------------------+rows in set (0.00 sec)MariaDB [(none)]&gt; show all slaves status\G;*************************** 1. row ***************************Connection_name: r1 #master的连接名，通道名，第一个参数。Slave_SQL_State: Slave has read all relay log; waiting for the slave I/O thread to update itSlave_IO_State: Waiting for master to send eventMaster_Host: 192.168.200.51Master_User: repMaster_Port: 3306Connect_Retry: 60Master_Log_File: mysql-bin51.000013Read_Master_Log_Pos: 107Relay_Log_File: mysqld-relay-bin-r1.000005Relay_Log_Pos: 396Relay_Master_Log_File: mysql-bin51.000013Slave_IO_Running: YesSlave_SQL_Running: YesReplicate_Do_DB: Replicate_Ignore_DB: Replicate_Do_Table: Replicate_Ignore_Table: Replicate_Wild_Do_Table: Replicate_Wild_Ignore_Table: Last_Errno: 0Last_Error: Skip_Counter: 0Exec_Master_Log_Pos: 107Relay_Log_Space: 845Until_Condition: NoneUntil_Log_File: Until_Log_Pos: 0Master_SSL_Allowed: NoMaster_SSL_CA_File: Master_SSL_CA_Path: Master_SSL_Cert: Master_SSL_Cipher: Master_SSL_Key: Seconds_Behind_Master: 0Master_SSL_Verify_Server_Cert: NoLast_IO_Errno: 0Last_IO_Error: Last_SQL_Errno: 0Last_SQL_Error: Replicate_Ignore_Server_Ids: Master_Server_Id: 1Master_SSL_Crl: Master_SSL_Crlpath: Using_Gtid: NoGtid_IO_Pos: Retried_transactions: 0 #这个连接重试事务的次数Max_relay_log_size: 104857600 #relay log的最大值. 如果是0的话，那么在启动的时候就会被设置成max_binlog_size 的大小Executed_log_entries: 17 #slave已经指向了多少个日志条目Slave_received_heartbeats: 0 #我们从master收到了多少个心跳包Slave_heartbeat_period: 1800.000 #多久从master请求一个心跳包 (以秒计算)Gtid_Slave_Pos:</code></pre><p>Slave_IO_Running: Yes<br>Slave_SQL_Running: Yes 这两个参数同为yes 说明已经同步成功</p><p>总结：<br>经过上面的测试，实现了多个主实例的数据同步到一个从实例，这个就可以把集中做分析的数据表同步到一起进行分析处理，大大减少了数据的中间处理时间和安全，这里还有一点特别注意的是，在同步数据库的时候可以用过滤选项（Replicate_Do_Table、Replicate_Ignore_Table、Replicate_Wild_Do_Table、Replicate_Wild_Ignore_Table），看着需要同步自己需要的表，不需要把没必要的也同步过来。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;目前MySQL依然只支持一个Slave从一个Master复制数据，虽然也可以做到一主多备(M-&amp;gt;S)，双主复制(M&lt;-&gt;M)等架构，但是局限性依然很大。由于项目的要求，需要各个主库的表整合到一个地方进行统计和分析，要是每次连不同的实例操作，是一件非常耗体力的操作。所以
+      
+    
+    </summary>
+    
+      <category term="Mysql" scheme="http://laughingmoon.github.io/categories/Mysql/"/>
+    
+    
+      <category term="msyql同步" scheme="http://laughingmoon.github.io/tags/msyql%E5%90%8C%E6%AD%A5/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>shadowsocks科学上网</title>
+    <link href="http://laughingmoon.github.io/2018/06/28/shadowsocks%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/"/>
+    <id>http://laughingmoon.github.io/2018/06/28/shadowsocks科学上网/</id>
+    <published>2018-06-28T15:17:09.000Z</published>
+    <updated>2018-06-28T16:06:02.146Z</updated>
+    
+    <content type="html"><![CDATA[<p>本脚本适用环境：<br>系统支持：CentOS，Debian，Ubuntu<br>内存要求：≥64M</p><p>默认配置：<br>服务器端口：自己设定（如不设定，默认从 9000-19999 之间随机生成）<br>密码：自己设定（如不设定，默认为 teddysun.com）<br>加密方式：自己设定（如不设定，默认为 aes-256-cfb）</p><p>Shadowsocks for Windows 客户端下载：<br><a href="https://github.com/shadowsocks/shadowsocks-windows/releases" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-windows/releases</a></p><p>使用方法：<br>使用root用户登录，运行以下命令：</p><pre><code>wget --no-check-certificate -O shadowsocks-go.sh https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-go.shchmod +x shadowsocks-go.sh./shadowsocks-go.sh 2&gt;&amp;1 | tee shadowsocks-go.log</code></pre><p>安装完成后，脚本提示如下：</p><pre><code>Congratulations, Shadowsocks-go server install completed!Your Server IP        :your_server_ipYour Server Port      :your_server_portYour Password         :your_passwordYour Encryption Method:your_encryption_method</code></pre><p>卸载方法：<br>使用 root 用户登录，运行以下命令：</p><pre><code>./shadowsocks-go.sh uninstall</code></pre><p>其他事项：<br>客户端配置的参考链接：<a href="https://teddysun.com/339.html" target="_blank" rel="noopener">https://teddysun.com/339.html</a></p><p>安装完成后即已后台启动 Shadowsocks-go ，运行：</p><pre><code>/etc/init.d/shadowsocks status</code></pre><p>可以查看 Shadowsocks-go 进程是否已经启动。<br>本脚本安装完成后，已将 shadowsocks-go 加入开机自启动。</p><pre><code>使用命令：启动：/etc/init.d/shadowsocks start停止：/etc/init.d/shadowsocks stop重启：/etc/init.d/shadowsocks restart状态：/etc/init.d/shadowsocks status</code></pre><p>多用户多端口配置文件示例：<br>配置文件路径：/etc/shadowsocks/config.json<br>    {<br>        “port_password”:{<br>             “8989”:”password0”,<br>             “9001”:”password1”,<br>             “9002”:”password2”,<br>             “9003”:”password3”,<br>             “9004”:”password4”<br>        },<br>        “method”:”your_encryption_method”,<br>        “timeout”:600<br>    }</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;本脚本适用环境：&lt;br&gt;系统支持：CentOS，Debian，Ubuntu&lt;br&gt;内存要求：≥64M&lt;/p&gt;
+&lt;p&gt;默认配置：&lt;br&gt;服务器端口：自己设定（如不设定，默认从 9000-19999 之间随机生成）&lt;br&gt;密码：自己设定（如不设定，默认为 teddysun.co
+      
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://laughingmoon.github.io/categories/Linux/"/>
+    
+    
+      <category term="VPN" scheme="http://laughingmoon.github.io/tags/VPN/"/>
+    
+  </entry>
+  
+  <entry>
     <title>快乐就是不戴面具的忧伤</title>
     <link href="http://laughingmoon.github.io/2018/06/25/%E5%BF%AB%E4%B9%90%E5%B0%B1%E6%98%AF%E4%B8%8D%E6%88%B4%E9%9D%A2%E5%85%B7%E7%9A%84%E5%BF%A7%E4%BC%A4/"/>
     <id>http://laughingmoon.github.io/2018/06/25/快乐就是不戴面具的忧伤/</id>
     <published>2018-06-24T16:24:25.000Z</published>
-    <updated>2018-06-27T16:59:13.512Z</updated>
+    <updated>2018-06-28T15:49:48.245Z</updated>
     
     <content type="html"><![CDATA[<h1 id="欢乐与忧伤"><a href="#欢乐与忧伤" class="headerlink" title="欢乐与忧伤"></a>欢乐与忧伤</h1><p>纪伯伦</p><p><strong>一位妇人说：请给我们谈谈欢乐和忧伤。</strong><br><strong>他回答：你们的欢乐是不带面具的忧伤。<br>你欢笑的泉眼常常也饱含着泪水。<br>除此之外，又当如何？<br>镌刻在你们身上的忧伤愈深，你们能盛装的欢乐愈多。<br>斟满了美酒的杯盏，难道不是曾在陶工炉火中锻造的杯盏吗？<br>当你们快乐时，请审视自己的内心，<br>你们会发现曾经的忧伤如今却让你们快乐。<br>当你们忧伤时，请再次审视自己的内心，<br>你们会发现曾经的快乐如今却让你们流泪。<br>你们中有些人说：“欢乐胜于忧伤。”<br>另一些人则说：“不，忧伤更伟大。”<br>但我要说，他们是一体的。<br>它们一同降临，当其中一个单独与你同坐时，<br>记住，另一个正在你的床上安歇。<br>的确，你们就像在忧伤与欢乐之间摇摆不定的天平。<br>只有当你们彻底空虚，你们才能平衡稳定。<br>把你浮沉不定的快乐和悲伤都留给<br>那用你来称量金银的守财奴吧。</strong></p>]]></content>
     

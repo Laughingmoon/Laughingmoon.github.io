@@ -112,7 +112,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="msyql同步," />
 
 
 
@@ -125,17 +125,18 @@
 
 
 
-<meta name="description" content="一只努力学习的小菜鸟，欢迎分享知识。">
-<meta property="og:type" content="website">
-<meta property="og:title" content="关于我">
-<meta property="og:url" content="http://laughingmoon.github.io/about/index.html">
+<meta name="description" content="目前MySQL依然只支持一个Slave从一个Master复制数据，虽然也可以做到一主多备(M-&amp;gt;S)，双主复制(MM)等架构，但是局限性依然很大。由于项目的要求，需要各个主库的表整合到一个地方进行统计和分析，要是每次连不同的实例操作，是一件非常耗体力的操作。所以继续一种类似多主一从的实例。 安装：可以根据一键安装包只安装mysql，亲测很方便实用。https://lnmp.org/insta">
+<meta name="keywords" content="msyql同步">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql双主一从同步">
+<meta property="og:url" content="http://laughingmoon.github.io/2018/06/28/MySQL双主一从同步/index.html">
 <meta property="og:site_name" content="Laughing BLOG">
-<meta property="og:description" content="一只努力学习的小菜鸟，欢迎分享知识。">
+<meta property="og:description" content="目前MySQL依然只支持一个Slave从一个Master复制数据，虽然也可以做到一主多备(M-&amp;gt;S)，双主复制(MM)等架构，但是局限性依然很大。由于项目的要求，需要各个主库的表整合到一个地方进行统计和分析，要是每次连不同的实例操作，是一件非常耗体力的操作。所以继续一种类似多主一从的实例。 安装：可以根据一键安装包只安装mysql，亲测很方便实用。https://lnmp.org/insta">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-27T15:08:24.320Z">
+<meta property="og:updated_time" content="2018-06-28T16:24:01.238Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="关于我">
-<meta name="twitter:description" content="一只努力学习的小菜鸟，欢迎分享知识。">
+<meta name="twitter:title" content="mysql双主一从同步">
+<meta name="twitter:description" content="目前MySQL依然只支持一个Slave从一个Master复制数据，虽然也可以做到一主多备(M-&amp;gt;S)，双主复制(MM)等架构，但是局限性依然很大。由于项目的要求，需要各个主库的表整合到一个地方进行统计和分析，要是每次连不同的实例操作，是一件非常耗体力的操作。所以继续一种类似多主一从的实例。 安装：可以根据一键安装包只安装mysql，亲测很方便实用。https://lnmp.org/insta">
 
 
 
@@ -165,13 +166,13 @@
 
 
 
-  <link rel="canonical" href="http://laughingmoon.github.io/about/"/>
+  <link rel="canonical" href="http://laughingmoon.github.io/2018/06/28/MySQL双主一从同步/"/>
 
 
 
 
 
-  <title>关于我 | Laughing BLOG</title>
+  <title>mysql双主一从同步 | Laughing BLOG</title>
   
 
 
@@ -336,34 +337,588 @@
 
   <div id="posts" class="posts-expand">
     
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://laughingmoon.github.io/2018/06/28/MySQL双主一从同步/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Laughing Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/favicon.ico">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laughing BLOG">
+    </span>
+
     
-    
-    <div class="post-block page">
       <header class="post-header">
 
-	<h2 class="post-title" itemprop="name headline">关于我</h2>
-
-
-
-</header>
-
-      
-      
-      
-      <div class="post-body">
         
         
-          <p>一只努力学习的小菜鸟，欢迎分享知识。</p>
-
+          <h2 class="post-title" itemprop="name headline">mysql双主一从同步</h2>
         
-      </div>
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-28T23:17:09+08:00">
+                2018-06-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">Mysql</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/06/28/MySQL双主一从同步/" class="leancloud_visitors" data-flag-title="mysql双主一从同步">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">热度&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+				 <span>℃</span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1,289
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  7
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
       
       
+
+      
+        <p>目前MySQL依然只支持一个Slave从一个Master复制数据，虽然也可以做到一主多备(M-&gt;S)，双主复制(M<->M)等架构，但是局限性依然很大。由于项目的要求，需要各个主库的表整合到一个地方进行统计和分析，要是每次连不同的实例操作，是一件非常耗体力的操作。所以继续一种类似多主一从的实例。</-></p>
+<p>安装：<br>可以根据一键安装包只安装mysql，亲测很方便实用。<br><a href="https://lnmp.org/install.html" target="_blank" rel="noopener">https://lnmp.org/install.html</a></p>
+<p>环境搭建：<br>Master 1：200.51(MariaDB)<br>Master 2：200.52(MariaDB)<br>Slave ：200.73(MariaDB) 修改好server-id</p>
+<p>确认好Master的POS：</p>
+<pre><code>M1:
+rep@192.168.200.51 : (none) 10:26:11&gt;show master status;
++--------------------+----------+--------------+------------------+
+| File | Position | Binlog_Do_DB | Binlog_Ignore_DB |
++--------------------+----------+--------------+------------------+
+| mysql-bin51.000013 | 107 | | test |
++--------------------+----------+--------------+------------------+
+row in set (0.01 sec)
+</code></pre><p>M2：</p>
+<pre><code>rep@192.168.200.52 : r2 10:26:23&gt;show master status; +---------------------+----------+--------------+------------------+
+| File | Position | Binlog_Do_DB | Binlog_Ignore_DB |
++---------------------+----------+--------------+------------------+
+| mysql-bin_52.000106 | 107 | | test |
++---------------------+----------+--------------+------------------+
+row in set (0.00 sec)
+</code></pre><p>1、主服务器的配置<br>2、编辑/etc/my.cnf文件<br>[root@localhost ~]# vim /etc/my.cnf    在[mysqld]段的最后添加以下内容</p>
+<pre><code>skip_name_resolve = ON
+innodb_file_per_table = ON
+server-id = 1 （id号不能跟从服务器相同）
+log-bin = master-log51（自定义二进制日志文件名）
+</code></pre><p>3、授权可以复制本地数据库信息的主机</p>
+<pre><code>[root@localhost ~]# /etc/init.d/mariadb start（启动mariadb server）
+[root@localhost ~]# mysql
+MariaDB [(none)]&gt; grant replication slave,replication client on *.* to &apos;repluser&apos;@&apos;10.1.51.%&apos; identified by &apos;replpasswd&apos;;
+MariaDB [(none)]&gt; flush privileges;
+</code></pre><p>4、第二台主机跟同上，但是server-id 不能相同，log-bin 文件名要区分开。<br>5、Slave上操作</p>
+<pre><code>MariaDB [(none)]&gt; change master &apos;r1&apos; to master_host=&apos;192.168.200.51&apos;,master_user=&apos;rep&apos;,master_password=&apos;rep123456&apos;,master_log_file=&apos;mysql-bin51.000013&apos;,master_log_pos=107;
+Query OK, 0 rows affected (0.23 sec)
+
+MariaDB [(none)]&gt; change master &apos;r2&apos; to master_host=&apos;192.168.200.52&apos;,master_user=&apos;rep&apos;,master_password=&apos;rep123456&apos;,master_log_file=&apos;mysql-bin_52.000106&apos;,master_log_pos=107;
+Query OK, 0 rows affected (0.25 sec)
+</code></pre><p>#查看所有通道</p>
+<pre><code>MariaDB [(none)]&gt; show all slaves status\G;
+*************************** 1. row ***************************
+Connection_name: r1
+Slave_SQL_State: 
+Slave_IO_State: 
+Master_Host: 192.168.200.51
+Master_User: rep
+Master_Port: 3306
+Connect_Retry: 60
+Master_Log_File: mysql-bin51.000013
+Read_Master_Log_Pos: 107
+Relay_Log_File: mysqld-relay-bin-r1.000001
+Relay_Log_Pos: 4
+Relay_Master_Log_File: mysql-bin51.000013
+Slave_IO_Running: No
+Slave_SQL_Running: No
+Replicate_Do_DB: 
+Replicate_Ignore_DB: 
+Replicate_Do_Table: 
+Replicate_Ignore_Table: 
+Replicate_Wild_Do_Table: 
+Replicate_Wild_Ignore_Table: 
+Last_Errno: 0
+Last_Error: 
+Skip_Counter: 0
+Exec_Master_Log_Pos: 107
+Relay_Log_Space: 248
+Until_Condition: None
+Until_Log_File: 
+Until_Log_Pos: 0
+Master_SSL_Allowed: No
+Master_SSL_CA_File: 
+Master_SSL_CA_Path: 
+Master_SSL_Cert: 
+Master_SSL_Cipher: 
+Master_SSL_Key: 
+Seconds_Behind_Master: NULL
+Master_SSL_Verify_Server_Cert: No
+Last_IO_Errno: 0
+Last_IO_Error: 
+Last_SQL_Errno: 0
+Last_SQL_Error: 
+Replicate_Ignore_Server_Ids: 
+Master_Server_Id: 0
+Master_SSL_Crl: 
+Master_SSL_Crlpath: 
+Using_Gtid: No
+Gtid_IO_Pos: 
+Retried_transactions: 0
+Max_relay_log_size: 104857600
+Executed_log_entries: 0
+Slave_received_heartbeats: 0
+Slave_heartbeat_period: 1800.000
+Gtid_Slave_Pos: 
+*************************** 2. row ***************************
+Connection_name: r2
+Slave_SQL_State: 
+Slave_IO_State: 
+Master_Host: 192.168.200.52
+Master_User: rep
+Master_Port: 3306
+Connect_Retry: 60
+Master_Log_File: mysql-bin_52.000106
+Read_Master_Log_Pos: 107
+Relay_Log_File: mysqld-relay-bin-r2.000001
+Relay_Log_Pos: 4
+Relay_Master_Log_File: mysql-bin_52.000106
+Slave_IO_Running: No
+Slave_SQL_Running: No
+Replicate_Do_DB: 
+Replicate_Ignore_DB: 
+Replicate_Do_Table: 
+Replicate_Ignore_Table: 
+Replicate_Wild_Do_Table: 
+Replicate_Wild_Ignore_Table: 
+Last_Errno: 0
+Last_Error: 
+Skip_Counter: 0
+Exec_Master_Log_Pos: 107
+Relay_Log_Space: 248
+Until_Condition: None
+Until_Log_File: 
+Until_Log_Pos: 0
+Master_SSL_Allowed: No
+Master_SSL_CA_File: 
+Master_SSL_CA_Path: 
+Master_SSL_Cert: 
+Master_SSL_Cipher: 
+Master_SSL_Key: 
+Seconds_Behind_Master: NULL
+Master_SSL_Verify_Server_Cert: No
+Last_IO_Errno: 0
+Last_IO_Error: 
+Last_SQL_Errno: 0
+Last_SQL_Error: 
+Replicate_Ignore_Server_Ids: 
+Master_Server_Id: 0
+Master_SSL_Crl: 
+Master_SSL_Crlpath: 
+Using_Gtid: No
+Gtid_IO_Pos: 
+Retried_transactions: 0
+Max_relay_log_size: 104857600
+Executed_log_entries: 0
+Slave_received_heartbeats: 0
+Slave_heartbeat_period: 1800.000
+Gtid_Slave_Pos: 
+rows in set (0.00 sec)
+
+ERROR: No query specified
+</code></pre><p>查看单个通道</p>
+<pre><code>MariaDB [(none)]&gt; show slave &apos;r1&apos; status\G;
+*************************** 1. row ***************************
+Slave_IO_State: 
+Master_Host: 192.168.200.51
+Master_User: rep
+Master_Port: 3306
+Connect_Retry: 60
+Master_Log_File: mysql-bin51.000013
+Read_Master_Log_Pos: 107
+Relay_Log_File: mysqld-relay-bin-r1.000001
+Relay_Log_Pos: 4
+Relay_Master_Log_File: mysql-bin51.000013
+Slave_IO_Running: No
+Slave_SQL_Running: No
+Replicate_Do_DB: 
+Replicate_Ignore_DB: 
+Replicate_Do_Table: 
+Replicate_Ignore_Table: 
+Replicate_Wild_Do_Table: 
+Replicate_Wild_Ignore_Table: 
+Last_Errno: 0
+Last_Error: 
+Skip_Counter: 0
+Exec_Master_Log_Pos: 107
+Relay_Log_Space: 248
+Until_Condition: None
+Until_Log_File: 
+Until_Log_Pos: 0
+Master_SSL_Allowed: No
+Master_SSL_CA_File: 
+Master_SSL_CA_Path: 
+Master_SSL_Cert: 
+Master_SSL_Cipher: 
+Master_SSL_Key: 
+Seconds_Behind_Master: NULL
+Master_SSL_Verify_Server_Cert: No
+Last_IO_Errno: 0
+Last_IO_Error: 
+Last_SQL_Errno: 0
+Last_SQL_Error: 
+Replicate_Ignore_Server_Ids: 
+Master_Server_Id: 0
+Master_SSL_Crl: 
+Master_SSL_Crlpath: 
+Using_Gtid: No
+Gtid_IO_Pos: 
+row in set (0.00 sec)
+
+ERROR: No query specified
+
+MariaDB [(none)]&gt; show slave &apos;r2&apos; status\G;
+*************************** 1. row ***************************
+Slave_IO_State: 
+Master_Host: 192.168.200.52
+Master_User: rep
+Master_Port: 3306
+Connect_Retry: 60
+Master_Log_File: mysql-bin_52.000106
+Read_Master_Log_Pos: 107
+Relay_Log_File: mysqld-relay-bin-r2.000001
+Relay_Log_Pos: 4
+Relay_Master_Log_File: mysql-bin_52.000106
+Slave_IO_Running: No
+Slave_SQL_Running: No
+Replicate_Do_DB: 
+Replicate_Ignore_DB: 
+Replicate_Do_Table: 
+Replicate_Ignore_Table: 
+Replicate_Wild_Do_Table: 
+Replicate_Wild_Ignore_Table: 
+Last_Errno: 0
+Last_Error: 
+Skip_Counter: 0
+Exec_Master_Log_Pos: 107
+Relay_Log_Space: 248
+Until_Condition: None
+Until_Log_File: 
+Until_Log_Pos: 0
+Master_SSL_Allowed: No
+Master_SSL_CA_File: 
+Master_SSL_CA_Path: 
+Master_SSL_Cert: 
+Master_SSL_Cipher: 
+Master_SSL_Key: 
+Seconds_Behind_Master: NULL
+Master_SSL_Verify_Server_Cert: No
+Last_IO_Errno: 0
+Last_IO_Error: 
+Last_SQL_Errno: 0
+Last_SQL_Error: 
+Replicate_Ignore_Server_Ids: 
+Master_Server_Id: 0
+Master_SSL_Crl: 
+Master_SSL_Crlpath: 
+Using_Gtid: No
+Gtid_IO_Pos: 
+row in set (0.00 sec)
+------------------------------------------------------------
+</code></pre><p>开启单个通道</p>
+<pre><code>MariaDB [(none)]&gt; start slave &apos;r1&apos;;
+Query OK, 0 rows affected (0.00 sec)
+
+MariaDB [(none)]&gt; start slave &apos;r2&apos;;
+Query OK, 0 rows affected (0.00 sec)
+</code></pre><p>开启所有通道</p>
+<pre><code>MariaDB [(none)]&gt; start all slaves;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+MariaDB [(none)]&gt; show warnings;
++-------+------+--------------------+
+| Level | Code | Message |
++-------+------+--------------------+
+| Note | 1937 | SLAVE &apos;r2&apos; started |
+| Note | 1937 | SLAVE &apos;r1&apos; started |
++-------+------+--------------------+
+rows in set (0.00 sec)
+
+
+MariaDB [(none)]&gt; show all slaves status\G;
+*************************** 1. row ***************************
+Connection_name: r1 #master的连接名，通道名，第一个参数。
+Slave_SQL_State: Slave has read all relay log; waiting for the slave I/O thread to update it
+Slave_IO_State: Waiting for master to send event
+Master_Host: 192.168.200.51
+Master_User: rep
+Master_Port: 3306
+Connect_Retry: 60
+Master_Log_File: mysql-bin51.000013
+Read_Master_Log_Pos: 107
+Relay_Log_File: mysqld-relay-bin-r1.000005
+Relay_Log_Pos: 396
+Relay_Master_Log_File: mysql-bin51.000013
+Slave_IO_Running: Yes
+Slave_SQL_Running: Yes
+Replicate_Do_DB: 
+Replicate_Ignore_DB: 
+Replicate_Do_Table: 
+Replicate_Ignore_Table: 
+Replicate_Wild_Do_Table: 
+Replicate_Wild_Ignore_Table: 
+Last_Errno: 0
+Last_Error: 
+Skip_Counter: 0
+Exec_Master_Log_Pos: 107
+Relay_Log_Space: 845
+Until_Condition: None
+Until_Log_File: 
+Until_Log_Pos: 0
+Master_SSL_Allowed: No
+Master_SSL_CA_File: 
+Master_SSL_CA_Path: 
+Master_SSL_Cert: 
+Master_SSL_Cipher: 
+Master_SSL_Key: 
+Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+Last_IO_Errno: 0
+Last_IO_Error: 
+Last_SQL_Errno: 0
+Last_SQL_Error: 
+Replicate_Ignore_Server_Ids: 
+Master_Server_Id: 1
+Master_SSL_Crl: 
+Master_SSL_Crlpath: 
+Using_Gtid: No
+Gtid_IO_Pos: 
+Retried_transactions: 0 #这个连接重试事务的次数
+Max_relay_log_size: 104857600 #relay log的最大值. 如果是0的话，那么在启动的时候就会被设置成max_binlog_size 的大小
+Executed_log_entries: 17 #slave已经指向了多少个日志条目
+Slave_received_heartbeats: 0 #我们从master收到了多少个心跳包
+Slave_heartbeat_period: 1800.000 #多久从master请求一个心跳包 (以秒计算)
+Gtid_Slave_Pos:
+</code></pre><p>Slave_IO_Running: Yes<br>Slave_SQL_Running: Yes 这两个参数同为yes 说明已经同步成功</p>
+<p>总结：<br>经过上面的测试，实现了多个主实例的数据同步到一个从实例，这个就可以把集中做分析的数据表同步到一起进行分析处理，大大减少了数据的中间处理时间和安全，这里还有一点特别注意的是，在同步数据库的时候可以用过滤选项（Replicate_Do_Table、Replicate_Ignore_Table、Replicate_Wild_Do_Table、Replicate_Wild_Ignore_Table），看着需要同步自己需要的表，不需要把没必要的也同步过来。</p>
+
       
     </div>
     
     
     
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>感谢您请我喝咖啡！(o´ω`o)</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt="Laughing Zhang 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="Laughing Zhang 支付宝"/>
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/msyql同步/" <i class="fa fa-tag"></i> msyql同步</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/28/shadowsocks科学上网/" rel="next" title="shadowsocks科学上网">
+                <i class="fa fa-chevron-left"></i> shadowsocks科学上网
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/28/svn钩子自动同步代码/" rel="prev" title="svn钩子自动同步代码">
+                svn钩子自动同步代码 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微博</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
   </div>
 
 
@@ -372,6 +927,16 @@
 
 
           
+
+  
+    <div class="comments" id="comments">
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8zNzY2Ni8xNDE5Nw=="></div>
+    </div>
+
+  
+ 
+  
+
 
   
  
@@ -723,6 +1288,17 @@
 
 
 
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
   
 
 
