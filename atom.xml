@@ -43,32 +43,6 @@
   </entry>
   
   <entry>
-    <title>svn钩子自动同步代码</title>
-    <link href="http://laughingmoon.github.io/2018/06/28/svn%E9%92%A9%E5%AD%90%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81/"/>
-    <id>http://laughingmoon.github.io/2018/06/28/svn钩子自动同步代码/</id>
-    <published>2018-06-28T15:17:09.000Z</published>
-    <updated>2018-06-28T15:50:30.050Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="设置svn钩子自动更新"><a href="#设置svn钩子自动更新" class="headerlink" title="设置svn钩子自动更新"></a>设置svn钩子自动更新</h2><p>1.安装svn </p><pre><code>yum install subversion</code></pre><p>2.建个svn的根目录，方便管理</p><pre><code>mkdir -p /home/svn/</code></pre><p>3.创建版本库 </p><pre><code>svnadmin create project1 </code></pre><p>4.创建站点目录</p><pre><code>mkdir /home/www/web</code></pre><p>5.建立钩子脚本<br>在/home/svn/repos/hooks 目录下创建 post-commit，内容如下</p><p> #!/bin/bash<br>    export LANG=zh_CN.UTF-8<br>    echo “Code Deployed at <code>date &quot;+%Y-%m-%d %H:%M&quot;</code>“ &gt;&gt; /home/svn/repos/hooks/deploy_log<br>    /usr/bin/svn update –username user1 –password user1  /home/www/web</p><p>post-commit给执行权限</p><pre><code>chmod +x post-commit</code></pre><p>6.Checkout一份代码到站点目录</p><pre><code>/usr/bin/svn checkout svn://localhost/repos /home/www/web</code></pre><p>7.启动svn  svnserve -d -r /home/svn<br>8.然后用windows svn客户端checkout一份代码到本地目录，然后在这个目录新增一个文件。那么就可以看到　　<br>/home/www/web目录下就新增了这个文件了。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;设置svn钩子自动更新&quot;&gt;&lt;a href=&quot;#设置svn钩子自动更新&quot; class=&quot;headerlink&quot; title=&quot;设置svn钩子自动更新&quot;&gt;&lt;/a&gt;设置svn钩子自动更新&lt;/h2&gt;&lt;p&gt;1.安装svn &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;yum instal
-      
-    
-    </summary>
-    
-      <category term="SVN" scheme="http://laughingmoon.github.io/categories/SVN/"/>
-    
-    
-      <category term="svn钩子" scheme="http://laughingmoon.github.io/tags/svn%E9%92%A9%E5%AD%90/"/>
-    
-  </entry>
-  
-  <entry>
     <title>mysql双主一从同步</title>
     <link href="http://laughingmoon.github.io/2018/06/28/MySQL%E5%8F%8C%E4%B8%BB%E4%B8%80%E4%BB%8E%E5%90%8C%E6%AD%A5/"/>
     <id>http://laughingmoon.github.io/2018/06/28/MySQL双主一从同步/</id>
@@ -116,6 +90,32 @@
     
     
       <category term="VPN" scheme="http://laughingmoon.github.io/tags/VPN/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>svn钩子自动同步代码</title>
+    <link href="http://laughingmoon.github.io/2018/06/28/svn%E9%92%A9%E5%AD%90%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81/"/>
+    <id>http://laughingmoon.github.io/2018/06/28/svn钩子自动同步代码/</id>
+    <published>2018-06-28T15:17:09.000Z</published>
+    <updated>2018-06-28T15:50:30.050Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="设置svn钩子自动更新"><a href="#设置svn钩子自动更新" class="headerlink" title="设置svn钩子自动更新"></a>设置svn钩子自动更新</h2><p>1.安装svn </p><pre><code>yum install subversion</code></pre><p>2.建个svn的根目录，方便管理</p><pre><code>mkdir -p /home/svn/</code></pre><p>3.创建版本库 </p><pre><code>svnadmin create project1 </code></pre><p>4.创建站点目录</p><pre><code>mkdir /home/www/web</code></pre><p>5.建立钩子脚本<br>在/home/svn/repos/hooks 目录下创建 post-commit，内容如下</p><p> #!/bin/bash<br>    export LANG=zh_CN.UTF-8<br>    echo “Code Deployed at <code>date &quot;+%Y-%m-%d %H:%M&quot;</code>“ &gt;&gt; /home/svn/repos/hooks/deploy_log<br>    /usr/bin/svn update –username user1 –password user1  /home/www/web</p><p>post-commit给执行权限</p><pre><code>chmod +x post-commit</code></pre><p>6.Checkout一份代码到站点目录</p><pre><code>/usr/bin/svn checkout svn://localhost/repos /home/www/web</code></pre><p>7.启动svn  svnserve -d -r /home/svn<br>8.然后用windows svn客户端checkout一份代码到本地目录，然后在这个目录新增一个文件。那么就可以看到　　<br>/home/www/web目录下就新增了这个文件了。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;设置svn钩子自动更新&quot;&gt;&lt;a href=&quot;#设置svn钩子自动更新&quot; class=&quot;headerlink&quot; title=&quot;设置svn钩子自动更新&quot;&gt;&lt;/a&gt;设置svn钩子自动更新&lt;/h2&gt;&lt;p&gt;1.安装svn &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;yum instal
+      
+    
+    </summary>
+    
+      <category term="SVN" scheme="http://laughingmoon.github.io/categories/SVN/"/>
+    
+    
+      <category term="svn钩子" scheme="http://laughingmoon.github.io/tags/svn%E9%92%A9%E5%AD%90/"/>
     
   </entry>
   
