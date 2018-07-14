@@ -43,32 +43,6 @@
   </entry>
   
   <entry>
-    <title>shadowsocks科学上网</title>
-    <link href="http://laughingmoon.github.io/2018/06/28/shadowsocks%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/"/>
-    <id>http://laughingmoon.github.io/2018/06/28/shadowsocks科学上网/</id>
-    <published>2018-06-28T15:17:09.000Z</published>
-    <updated>2018-06-28T16:06:02.146Z</updated>
-    
-    <content type="html"><![CDATA[<p>本脚本适用环境：<br>系统支持：CentOS，Debian，Ubuntu<br>内存要求：≥64M</p><p>默认配置：<br>服务器端口：自己设定（如不设定，默认从 9000-19999 之间随机生成）<br>密码：自己设定（如不设定，默认为 teddysun.com）<br>加密方式：自己设定（如不设定，默认为 aes-256-cfb）</p><p>Shadowsocks for Windows 客户端下载：<br><a href="https://github.com/shadowsocks/shadowsocks-windows/releases" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-windows/releases</a></p><p>使用方法：<br>使用root用户登录，运行以下命令：</p><pre><code>wget --no-check-certificate -O shadowsocks-go.sh https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-go.shchmod +x shadowsocks-go.sh./shadowsocks-go.sh 2&gt;&amp;1 | tee shadowsocks-go.log</code></pre><p>安装完成后，脚本提示如下：</p><pre><code>Congratulations, Shadowsocks-go server install completed!Your Server IP        :your_server_ipYour Server Port      :your_server_portYour Password         :your_passwordYour Encryption Method:your_encryption_method</code></pre><p>卸载方法：<br>使用 root 用户登录，运行以下命令：</p><pre><code>./shadowsocks-go.sh uninstall</code></pre><p>其他事项：<br>客户端配置的参考链接：<a href="https://teddysun.com/339.html" target="_blank" rel="noopener">https://teddysun.com/339.html</a></p><p>安装完成后即已后台启动 Shadowsocks-go ，运行：</p><pre><code>/etc/init.d/shadowsocks status</code></pre><p>可以查看 Shadowsocks-go 进程是否已经启动。<br>本脚本安装完成后，已将 shadowsocks-go 加入开机自启动。</p><pre><code>使用命令：启动：/etc/init.d/shadowsocks start停止：/etc/init.d/shadowsocks stop重启：/etc/init.d/shadowsocks restart状态：/etc/init.d/shadowsocks status</code></pre><p>多用户多端口配置文件示例：<br>配置文件路径：/etc/shadowsocks/config.json<br>    {<br>        “port_password”:{<br>             “8989”:”password0”,<br>             “9001”:”password1”,<br>             “9002”:”password2”,<br>             “9003”:”password3”,<br>             “9004”:”password4”<br>        },<br>        “method”:”your_encryption_method”,<br>        “timeout”:600<br>    }</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;本脚本适用环境：&lt;br&gt;系统支持：CentOS，Debian，Ubuntu&lt;br&gt;内存要求：≥64M&lt;/p&gt;
-&lt;p&gt;默认配置：&lt;br&gt;服务器端口：自己设定（如不设定，默认从 9000-19999 之间随机生成）&lt;br&gt;密码：自己设定（如不设定，默认为 teddysun.co
-      
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://laughingmoon.github.io/categories/Linux/"/>
-    
-    
-      <category term="VPN" scheme="http://laughingmoon.github.io/tags/VPN/"/>
-    
-  </entry>
-  
-  <entry>
     <title>MySQL/MariaDB主主数据同步配置</title>
     <link href="http://laughingmoon.github.io/2018/06/28/MySQL-MariaDB%E4%B8%BB%E4%B8%BB%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/"/>
     <id>http://laughingmoon.github.io/2018/06/28/MySQL-MariaDB主主数据同步配置/</id>
@@ -91,6 +65,32 @@
     
     
       <category term="msyql同步" scheme="http://laughingmoon.github.io/tags/msyql%E5%90%8C%E6%AD%A5/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>shadowsocks科学上网</title>
+    <link href="http://laughingmoon.github.io/2018/06/28/shadowsocks%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/"/>
+    <id>http://laughingmoon.github.io/2018/06/28/shadowsocks科学上网/</id>
+    <published>2018-06-28T15:17:09.000Z</published>
+    <updated>2018-06-28T16:06:02.146Z</updated>
+    
+    <content type="html"><![CDATA[<p>本脚本适用环境：<br>系统支持：CentOS，Debian，Ubuntu<br>内存要求：≥64M</p><p>默认配置：<br>服务器端口：自己设定（如不设定，默认从 9000-19999 之间随机生成）<br>密码：自己设定（如不设定，默认为 teddysun.com）<br>加密方式：自己设定（如不设定，默认为 aes-256-cfb）</p><p>Shadowsocks for Windows 客户端下载：<br><a href="https://github.com/shadowsocks/shadowsocks-windows/releases" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-windows/releases</a></p><p>使用方法：<br>使用root用户登录，运行以下命令：</p><pre><code>wget --no-check-certificate -O shadowsocks-go.sh https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-go.shchmod +x shadowsocks-go.sh./shadowsocks-go.sh 2&gt;&amp;1 | tee shadowsocks-go.log</code></pre><p>安装完成后，脚本提示如下：</p><pre><code>Congratulations, Shadowsocks-go server install completed!Your Server IP        :your_server_ipYour Server Port      :your_server_portYour Password         :your_passwordYour Encryption Method:your_encryption_method</code></pre><p>卸载方法：<br>使用 root 用户登录，运行以下命令：</p><pre><code>./shadowsocks-go.sh uninstall</code></pre><p>其他事项：<br>客户端配置的参考链接：<a href="https://teddysun.com/339.html" target="_blank" rel="noopener">https://teddysun.com/339.html</a></p><p>安装完成后即已后台启动 Shadowsocks-go ，运行：</p><pre><code>/etc/init.d/shadowsocks status</code></pre><p>可以查看 Shadowsocks-go 进程是否已经启动。<br>本脚本安装完成后，已将 shadowsocks-go 加入开机自启动。</p><pre><code>使用命令：启动：/etc/init.d/shadowsocks start停止：/etc/init.d/shadowsocks stop重启：/etc/init.d/shadowsocks restart状态：/etc/init.d/shadowsocks status</code></pre><p>多用户多端口配置文件示例：<br>配置文件路径：/etc/shadowsocks/config.json<br>    {<br>        “port_password”:{<br>             “8989”:”password0”,<br>             “9001”:”password1”,<br>             “9002”:”password2”,<br>             “9003”:”password3”,<br>             “9004”:”password4”<br>        },<br>        “method”:”your_encryption_method”,<br>        “timeout”:600<br>    }</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;本脚本适用环境：&lt;br&gt;系统支持：CentOS，Debian，Ubuntu&lt;br&gt;内存要求：≥64M&lt;/p&gt;
+&lt;p&gt;默认配置：&lt;br&gt;服务器端口：自己设定（如不设定，默认从 9000-19999 之间随机生成）&lt;br&gt;密码：自己设定（如不设定，默认为 teddysun.co
+      
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://laughingmoon.github.io/categories/Linux/"/>
+    
+    
+      <category term="VPN" scheme="http://laughingmoon.github.io/tags/VPN/"/>
     
   </entry>
   
